@@ -1,4 +1,4 @@
-module github.com/scs-solution/go.pkt
+module github.com/scs-solution/go.pkt2
 
 require (
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
