@@ -33,72 +33,72 @@
 // decode complete "stacks" of packets, instead of manipulating single ones.
 package layers
 
-import "github.com/ghedo/go.pkt/packet"
+import "github.com/scs-solution/go.pkt2/packet"
 
-import "github.com/ghedo/go.pkt/packet/arp"
-import "github.com/ghedo/go.pkt/packet/eth"
-import "github.com/ghedo/go.pkt/packet/icmpv4"
-import "github.com/ghedo/go.pkt/packet/icmpv6"
-import "github.com/ghedo/go.pkt/packet/ipv4"
-import "github.com/ghedo/go.pkt/packet/ipv6"
-import "github.com/ghedo/go.pkt/packet/llc"
-import "github.com/ghedo/go.pkt/packet/radiotap"
-import "github.com/ghedo/go.pkt/packet/raw"
-import "github.com/ghedo/go.pkt/packet/sll"
-import "github.com/ghedo/go.pkt/packet/snap"
-import "github.com/ghedo/go.pkt/packet/tcp"
-import "github.com/ghedo/go.pkt/packet/udp"
-import "github.com/ghedo/go.pkt/packet/vlan"
+import "github.com/scs-solution/go.pkt2/packet/arp"
+import "github.com/scs-solution/go.pkt2/packet/eth"
+import "github.com/scs-solution/go.pkt2/packet/icmpv4"
+import "github.com/scs-solution/go.pkt2/packet/icmpv6"
+import "github.com/scs-solution/go.pkt2/packet/ipv4"
+import "github.com/scs-solution/go.pkt2/packet/ipv6"
+import "github.com/scs-solution/go.pkt2/packet/llc"
+import "github.com/scs-solution/go.pkt2/packet/radiotap"
+import "github.com/scs-solution/go.pkt2/packet/raw"
+import "github.com/scs-solution/go.pkt2/packet/sll"
+import "github.com/scs-solution/go.pkt2/packet/snap"
+import "github.com/scs-solution/go.pkt2/packet/tcp"
+import "github.com/scs-solution/go.pkt2/packet/udp"
+import "github.com/scs-solution/go.pkt2/packet/vlan"
 
 // Compose packets into a chain and update their values (e.g. length, payload
 // protocol) accordingly.
 func Compose(pkts ...packet.Packet) (packet.Packet, error) {
-    next_pkt := packet.Packet(nil)
+	next_pkt := packet.Packet(nil)
 
-    for i := len(pkts) - 1; i >= 0; i-- {
-        if next_pkt != nil {
-            err := pkts[i].SetPayload(next_pkt)
-            if err != nil {
-                return nil, err
-            }
-        }
+	for i := len(pkts) - 1; i >= 0; i-- {
+		if next_pkt != nil {
+			err := pkts[i].SetPayload(next_pkt)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-        next_pkt = pkts[i]
-    }
+		next_pkt = pkts[i]
+	}
 
-    return pkts[0], nil
+	return pkts[0], nil
 }
 
 // Pack packets into their binary form. This will stack the packets before
 // encoding them (see the Compose() method) and also calculate the checksums.
 func Pack(pkts ...packet.Packet) ([]byte, error) {
-    var buf packet.Buffer
+	var buf packet.Buffer
 
-    base_pkt, err := Compose(pkts...)
-    if err != nil {
-        return nil, err
-    }
+	base_pkt, err := Compose(pkts...)
+	if err != nil {
+		return nil, err
+	}
 
-    tot_len := int(base_pkt.GetLength())
+	tot_len := int(base_pkt.GetLength())
 
-    buf.Init(make([]byte, tot_len))
+	buf.Init(make([]byte, tot_len))
 
-    for i := len(pkts) - 1; i >= 0; i-- {
-        cur_pkt := pkts[i]
-        cur_len := int(cur_pkt.GetLength())
+	for i := len(pkts) - 1; i >= 0; i-- {
+		cur_pkt := pkts[i]
+		cur_len := int(cur_pkt.GetLength())
 
-        buf.SetOffset(tot_len - cur_len)
-        buf.NewLayer()
+		buf.SetOffset(tot_len - cur_len)
+		buf.NewLayer()
 
-        err := cur_pkt.Pack(&buf)
-        if err != nil {
-            return nil, err
-        }
-    }
+		err := cur_pkt.Pack(&buf)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-    buf.SetOffset(0)
+	buf.SetOffset(0)
 
-    return buf.Bytes(), nil
+	return buf.Bytes(), nil
 }
 
 // Unpack the given byte slice into the packet list supplied. Note that this
@@ -110,37 +110,36 @@ func Pack(pkts ...packet.Packet) ([]byte, error) {
 // it. If you can't guarantee that the data slice won't change, you'll need to
 // copy it and pass the copy to Unpack().
 func Unpack(buf []byte, pkts ...packet.Packet) (packet.Packet, error) {
-    var b packet.Buffer
-    b.Init(buf)
+	var b packet.Buffer
+	b.Init(buf)
 
-    prev_pkt := packet.Packet(nil)
+	prev_pkt := packet.Packet(nil)
 
-    for _, p := range pkts {
-        if b.Len() <= 0 {
-            break
-        }
+	for _, p := range pkts {
+		if b.Len() <= 0 {
+			break
+		}
 
-        b.NewLayer()
+		b.NewLayer()
 
-        err := p.Unpack(&b)
-        if err != nil {
-            return nil, err
-        }
+		err := p.Unpack(&b)
+		if err != nil {
+			return nil, err
+		}
 
-        if prev_pkt != nil {
-            prev_pkt.SetPayload(p)
-        }
+		if prev_pkt != nil {
+			prev_pkt.SetPayload(p)
+		}
 
-        if p.GuessPayloadType() == packet.None {
-            break
-        }
+		if p.GuessPayloadType() == packet.None {
+			break
+		}
 
-        prev_pkt = p
-    }
+		prev_pkt = p
+	}
 
-    return pkts[0], nil
+	return pkts[0], nil
 }
-
 
 // Recursively unpack the given byte slice into a packet. The link_type argument
 // must specify the type of the first layer in the input data, successive layers
@@ -151,71 +150,85 @@ func Unpack(buf []byte, pkts ...packet.Packet) (packet.Packet, error) {
 // it. If you can't guarantee that the data slice won't change, you'll need to
 // copy it and pass the copy to UnpackAll().
 func UnpackAll(buf []byte, link_type packet.Type) (packet.Packet, error) {
-    var b packet.Buffer
-    b.Init(buf)
+	var b packet.Buffer
+	b.Init(buf)
 
-    first_pkt := packet.Packet(nil)
-    prev_pkt  := packet.Packet(nil)
+	first_pkt := packet.Packet(nil)
+	prev_pkt := packet.Packet(nil)
 
-    for link_type != packet.None {
-        var p packet.Packet
+	for link_type != packet.None {
+		var p packet.Packet
 
-        if b.Len() <= 0 {
-            break
-        }
+		if b.Len() <= 0 {
+			break
+		}
 
-        switch link_type {
-        case packet.ARP:      p = &arp.Packet{}
-        case packet.Eth:      p = &eth.Packet{}
-        case packet.ICMPv4:   p = &icmpv4.Packet{}
-        case packet.ICMPv6:   p = &icmpv6.Packet{}
-        case packet.IPv4:     p = &ipv4.Packet{}
-        case packet.IPv6:     p = &ipv6.Packet{}
-        case packet.LLC:      p = &llc.Packet{}
-        case packet.RadioTap: p = &radiotap.Packet{}
-        case packet.SLL:      p = &sll.Packet{}
-        case packet.SNAP:     p = &snap.Packet{}
-        case packet.TCP:      p = &tcp.Packet{}
-        case packet.UDP:      p = &udp.Packet{}
-        case packet.VLAN:     p = &vlan.Packet{}
-        default:              p = &raw.Packet{}
-        }
+		switch link_type {
+		case packet.ARP:
+			p = &arp.Packet{}
+		case packet.Eth:
+			p = &eth.Packet{}
+		case packet.ICMPv4:
+			p = &icmpv4.Packet{}
+		case packet.ICMPv6:
+			p = &icmpv6.Packet{}
+		case packet.IPv4:
+			p = &ipv4.Packet{}
+		case packet.IPv6:
+			p = &ipv6.Packet{}
+		case packet.LLC:
+			p = &llc.Packet{}
+		case packet.RadioTap:
+			p = &radiotap.Packet{}
+		case packet.SLL:
+			p = &sll.Packet{}
+		case packet.SNAP:
+			p = &snap.Packet{}
+		case packet.TCP:
+			p = &tcp.Packet{}
+		case packet.UDP:
+			p = &udp.Packet{}
+		case packet.VLAN:
+			p = &vlan.Packet{}
+		default:
+			p = &raw.Packet{}
+		}
 
-        if p == nil {
-            break
-        }
+		if p == nil {
+			break
+		}
 
-        b.NewLayer()
+		b.NewLayer()
 
-        err := p.Unpack(&b)
-        if err != nil {
-            return nil, err
-        }
+		err := p.Unpack(&b)
+		if err != nil {
+			return nil, err
+		}
 
-        if prev_pkt != nil {
-            prev_pkt.SetPayload(p)
-        } else {
-            first_pkt = p
-        }
+		if prev_pkt != nil {
+			prev_pkt.SetPayload(p)
+		} else {
+			first_pkt = p
+		}
 
-        prev_pkt  = p
-        link_type = p.GuessPayloadType()
-    }
+		prev_pkt = p
+		link_type = p.GuessPayloadType()
+	}
 
-    return first_pkt, nil
+	return first_pkt, nil
 }
 
 // Return the first layer of the given type in the packet. If no suitable layer
 // is found, return nil.
 func FindLayer(p packet.Packet, layer packet.Type) packet.Packet {
-    switch {
-    case p == nil:
-        return nil
+	switch {
+	case p == nil:
+		return nil
 
-    case p.GetType() == layer:
-        return p
+	case p.GetType() == layer:
+		return p
 
-    default:
-        return FindLayer(p.Payload(), layer)
-    }
+	default:
+		return FindLayer(p.Payload(), layer)
+	}
 }

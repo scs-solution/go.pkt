@@ -1,43 +1,42 @@
-go.pkt
-======
+# go.pkt
 
 ![Travis CI](https://secure.travis-ci.org/ghedo/go.pkt.png)
 
 **go.pkt** provides Go libraries for capturing, injecting, filtering, encoding and
 decoding network packets.
 
-* [capture][capture]: provides the basic interface for packet capturing and
+- [capture][capture]: provides the basic interface for packet capturing and
   injection. Different implementations ("pcap", "file", ...) are provided as
   subpackages.
 
-* [filter][filter]: provides an API for compiling and manipulating BPF filters.
+- [filter][filter]: provides an API for compiling and manipulating BPF filters.
   A filter can be either compiled from tcpdump-like expressions, or created from
   basic BPF instructions. Filters can then be either applied to packet sources
   (see the capture package) or directly run against binary data.
 
-* [packet][packet]: provides the interfaces for implementing packet encoders
+- [packet][packet]: provides the interfaces for implementing packet encoders
   and decoders. Every supported protocol implements the Packet interface as a
   submodule of this package (e.g. packet/ipv4, packet/tcp, ...).
 
-* [layers][layers]: provides utility functions for encoding and decoding
+- [layers][layers]: provides utility functions for encoding and decoding
   packets to/from binary data. Differently from the basic "packet" interface,
   this can encode and decode complete "stacks" of packets, instead of
   manipulating single ones.
 
-* [network][network]: provides utility functions for sending and receiving
+- [network][network]: provides utility functions for sending and receiving
   packets over the network. Basically, it hides some of the complexity of using
   the capture and layers packages together.
 
-* [routing][routing]: provides network routing information about the system. It
+- [routing][routing]: provides network routing information about the system. It
   can either return all available routes or select a specific route depending on
   a destination address.
 
-[capture]: http://godoc.org/github.com/ghedo/go.pkt/capture
-[filter]: http://godoc.org/github.com/ghedo/go.pkt/filter
-[packet]: http://godoc.org/github.com/ghedo/go.pkt/packet
-[layers]: http://godoc.org/github.com/ghedo/go.pkt/layers
-[network]: http://godoc.org/github.com/ghedo/go.pkt/network
-[routing]: http://godoc.org/github.com/ghedo/go.pkt/routing
+[capture]: http://godoc.org/github.com/scs-solution/go.pkt2/capture
+[filter]: http://godoc.org/github.com/scs-solution/go.pkt2/filter
+[packet]: http://godoc.org/github.com/scs-solution/go.pkt2/packet
+[layers]: http://godoc.org/github.com/scs-solution/go.pkt2/layers
+[network]: http://godoc.org/github.com/scs-solution/go.pkt2/network
+[routing]: http://godoc.org/github.com/scs-solution/go.pkt2/routing
 
 ## Getting Started
 
@@ -228,7 +227,7 @@ source repository.
 
 ## Dependencies
 
- * `libpcap`
+- `libpcap`
 
 ## Copyright
 

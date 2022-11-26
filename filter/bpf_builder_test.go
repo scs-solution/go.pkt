@@ -33,16 +33,16 @@ package filter_test
 import "log"
 import "testing"
 
-import "github.com/ghedo/go.pkt/filter"
+import "github.com/scs-solution/go.pkt2/filter"
 
 func TestEmpty(t *testing.T) {
-    bld := filter.NewBuilder()
+	bld := filter.NewBuilder()
 
-    flt := bld.Build()
-    if flt.Len() != 0 {
-        t.Fatalf("Len mismatch: %d", flt.Len())
-    }
-    flt.Cleanup()
+	flt := bld.Build()
+	if flt.Len() != 0 {
+		t.Fatalf("Len mismatch: %d", flt.Len())
+	}
+	flt.Cleanup()
 }
 
 var test_arp = `{ 0x28,   0,   0, 0x0000000c },
@@ -51,30 +51,30 @@ var test_arp = `{ 0x28,   0,   0, 0x0000000c },
 { 0x06,   0,   0, 0x00000000 },`
 
 func TestARP(t *testing.T) {
-    arp := filter.NewBuilder().
-        LD(filter.Half, filter.ABS, 12).
-        JEQ(filter.Const, "", "fail", 0x806).
-        RET(filter.Const, 0x40000).
-        Label("fail").
-        RET(filter.Const, 0x0).
-        Build()
+	arp := filter.NewBuilder().
+		LD(filter.Half, filter.ABS, 12).
+		JEQ(filter.Const, "", "fail", 0x806).
+		RET(filter.Const, 0x40000).
+		Label("fail").
+		RET(filter.Const, 0x0).
+		Build()
 
-    if arp.String() != test_arp {
-        t.Fatalf("Program mismatch: %s", arp.String())
-    }
+	if arp.String() != test_arp {
+		t.Fatalf("Program mismatch: %s", arp.String())
+	}
 }
 
 func TestARPcBPF(t *testing.T) {
-    arp := filter.NewBuilder().
-    AppendInstruction(40, 0, 0, 12).
-    AppendInstruction(21, 0, 1, 2054).
-    AppendInstruction(6, 0, 0, 262144).
-    AppendInstruction(6, 0, 0, 0).
-    Build()
+	arp := filter.NewBuilder().
+		AppendInstruction(40, 0, 0, 12).
+		AppendInstruction(21, 0, 1, 2054).
+		AppendInstruction(6, 0, 0, 262144).
+		AppendInstruction(6, 0, 0, 0).
+		Build()
 
-    if arp.String() != test_arp {
-        t.Fatalf("Program mismatch: %s", arp.String())
-    }
+	if arp.String() != test_arp {
+		t.Fatalf("Program mismatch: %s", arp.String())
+	}
 }
 
 var test_dns = `{ 0x00,   0,   0, 0x00000014 },
@@ -93,80 +93,79 @@ var test_dns = `{ 0x00,   0,   0, 0x00000014 },
 { 0x06,   0,   0, 0x00000000 },`
 
 func TestDNS(t *testing.T) {
-    dns := filter.NewBuilder().
-        LD(filter.Word, filter.IMM, 20).
-        LDX(filter.Byte, filter.MSH, 0).
-        ADD(filter.Index, 0).
-        TAX().
-        Label("lb_0").
-        LD(filter.Word, filter.IND, 0).
-        JEQ(filter.Const, "", "lb_1", 0x07657861).
-        LD(filter.Word, filter.IND, 4).
-        JEQ(filter.Const, "", "lb_1", 0x6d706c65).
-        LD(filter.Word, filter.IND, 8).
-        JEQ(filter.Const, "", "lb_1", 0x03636f6d).
-        LD(filter.Byte, filter.IND, 12).
-        JEQ(filter.Const, "", "lb_1", 0x00).
-        RET(filter.Const, 1).
-        Label("lb_1").
-        RET(filter.Const, 0).
-        Build()
+	dns := filter.NewBuilder().
+		LD(filter.Word, filter.IMM, 20).
+		LDX(filter.Byte, filter.MSH, 0).
+		ADD(filter.Index, 0).
+		TAX().
+		Label("lb_0").
+		LD(filter.Word, filter.IND, 0).
+		JEQ(filter.Const, "", "lb_1", 0x07657861).
+		LD(filter.Word, filter.IND, 4).
+		JEQ(filter.Const, "", "lb_1", 0x6d706c65).
+		LD(filter.Word, filter.IND, 8).
+		JEQ(filter.Const, "", "lb_1", 0x03636f6d).
+		LD(filter.Byte, filter.IND, 12).
+		JEQ(filter.Const, "", "lb_1", 0x00).
+		RET(filter.Const, 1).
+		Label("lb_1").
+		RET(filter.Const, 0).
+		Build()
 
-
-    if dns.String() != test_dns {
-        t.Fatalf("Program mismatch: %s", dns.String())
-    }
+	if dns.String() != test_dns {
+		t.Fatalf("Program mismatch: %s", dns.String())
+	}
 }
 
 func TestALUOps(t *testing.T) {
-    flt := filter.NewBuilder().
-        LD(filter.Byte, filter.ABS, 0).
-        JEQ(filter.Const, "", "fail", 0x0f).
-        ADD(filter.Const, 1).
-        JEQ(filter.Const, "", "fail", 0x10).
-        SUB(filter.Const, 1).
-        JEQ(filter.Const, "", "fail", 0x0f).
-        MUL(filter.Const, 2).
-        JEQ(filter.Const, "", "fail", 0x1e).
-        DIV(filter.Const, 2).
-        JEQ(filter.Const, "", "fail", 0x0f).
-        OR(filter.Const, 0xf0).
-        JEQ(filter.Const, "", "fail", 0xff).
-        AND(filter.Const, 0x0f).
-        JEQ(filter.Const, "", "fail", 0x0f).
-        LSH(filter.Const, 4).
-        JEQ(filter.Const, "", "fail", 0xf0).
-        RSH(filter.Const, 4).
-        JEQ(filter.Const, "", "fail", 0x0f).
-        MOD(filter.Const, 0x0d).
-        JEQ(filter.Const, "", "fail", 0x02).
-        XOR(filter.Const, 0x03).
-        JEQ(filter.Const, "", "fail", 0x01).
-        RET(filter.Const, 0x40000).
-        Label("fail").
-        RET(filter.Const, 0x0).
-        Build()
+	flt := filter.NewBuilder().
+		LD(filter.Byte, filter.ABS, 0).
+		JEQ(filter.Const, "", "fail", 0x0f).
+		ADD(filter.Const, 1).
+		JEQ(filter.Const, "", "fail", 0x10).
+		SUB(filter.Const, 1).
+		JEQ(filter.Const, "", "fail", 0x0f).
+		MUL(filter.Const, 2).
+		JEQ(filter.Const, "", "fail", 0x1e).
+		DIV(filter.Const, 2).
+		JEQ(filter.Const, "", "fail", 0x0f).
+		OR(filter.Const, 0xf0).
+		JEQ(filter.Const, "", "fail", 0xff).
+		AND(filter.Const, 0x0f).
+		JEQ(filter.Const, "", "fail", 0x0f).
+		LSH(filter.Const, 4).
+		JEQ(filter.Const, "", "fail", 0xf0).
+		RSH(filter.Const, 4).
+		JEQ(filter.Const, "", "fail", 0x0f).
+		MOD(filter.Const, 0x0d).
+		JEQ(filter.Const, "", "fail", 0x02).
+		XOR(filter.Const, 0x03).
+		JEQ(filter.Const, "", "fail", 0x01).
+		RET(filter.Const, 0x40000).
+		Label("fail").
+		RET(filter.Const, 0x0).
+		Build()
 
-    if !flt.Validate() {
-        t.Fatalf("Invalid filter: %s", flt.String())
-    }
+	if !flt.Validate() {
+		t.Fatalf("Invalid filter: %s", flt.String())
+	}
 
-    if !flt.Match([]byte{0x0f}) {
-        t.Fatal("Bad Math")
-    }
+	if !flt.Match([]byte{0x0f}) {
+		t.Fatal("Bad Math")
+	}
 }
 
 func ExampleBuilder() {
-    // Build a filter to match ARP packets on top of Ethernet
-    flt := filter.NewBuilder().
-        LD(filter.Half, filter.ABS, 12).
-        JEQ(filter.Const, "", "fail", 0x806).
-        RET(filter.Const, 0x40000).
-        Label("fail").
-        RET(filter.Const, 0x0).
-        Build()
+	// Build a filter to match ARP packets on top of Ethernet
+	flt := filter.NewBuilder().
+		LD(filter.Half, filter.ABS, 12).
+		JEQ(filter.Const, "", "fail", 0x806).
+		RET(filter.Const, 0x40000).
+		Label("fail").
+		RET(filter.Const, 0x0).
+		Build()
 
-    if flt.Match([]byte("random data")) {
-        log.Println("MATCH!!!")
-    }
+	if flt.Match([]byte("random data")) {
+		log.Println("MATCH!!!")
+	}
 }
