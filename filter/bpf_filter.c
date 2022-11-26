@@ -48,22 +48,22 @@
 #endif
 
 #define EXTRACT_BYTE(p)\
-	((u_int8_t)\
-		((u_int8_t)*((u_char *)p)))
+	((uint8_t)\
+		((uint8_t)*((u_char *)p)))
 
 #ifndef BPF_ALIGN
-#define EXTRACT_SHORT(p)	((u_int16_t)ntohs(*(u_int16_t *)p))
-#define EXTRACT_LONG(p)		(ntohl(*(u_int32_t *)p))
+#define EXTRACT_SHORT(p)	((uint16_t)ntohs(*(uint16_t *)p))
+#define EXTRACT_LONG(p)		(ntohl(*(uint32_t *)p))
 #else
 #define EXTRACT_SHORT(p)\
-	((u_int16_t)\
-		((u_int16_t)*((u_char *)p+0)<<8|\
-		 (u_int16_t)*((u_char *)p+1)<<0))
+	((uint16_t)\
+		((uint16_t)*((u_char *)p+0)<<8|\
+		 (uint16_t)*((u_char *)p+1)<<0))
 #define EXTRACT_LONG(p)\
-		((u_int32_t)*((u_char *)p+0)<<24|\
-		 (u_int32_t)*((u_char *)p+1)<<16|\
-		 (u_int32_t)*((u_char *)p+2)<<8|\
-		 (u_int32_t)*((u_char *)p+3)<<0)
+		((uint32_t)*((u_char *)p+0)<<24|\
+		 (uint32_t)*((u_char *)p+1)<<16|\
+		 (uint32_t)*((u_char *)p+2)<<8|\
+		 (uint32_t)*((u_char *)p+3)<<0)
 #endif
 
 #include "bpf_filter.h"
@@ -76,9 +76,9 @@
 unsigned int
 bpf_filter(const struct bpf_insn *pc, char *p, unsigned int wirelen, unsigned int buflen)
 {
-	u_int32_t A = 0, X = 0;
-	u_int32_t k;
-	u_int32_t mem[BPF_MEMWORDS];
+	uint32_t A = 0, X = 0;
+	uint32_t k;
+	uint32_t mem[BPF_MEMWORDS];
 
 	bzero(mem, sizeof(mem));
 
