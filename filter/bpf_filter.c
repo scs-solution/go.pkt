@@ -73,8 +73,8 @@
  * wirelen is the length of the original packet
  * buflen is the amount of data present
  */
-u_int
-bpf_filter(const struct bpf_insn *pc, char *p, u_int wirelen, u_int buflen)
+unsigned int
+bpf_filter(const struct bpf_insn *pc, char *p, unsigned int wirelen, unsigned int buflen)
 {
 	u_int32_t A = 0, X = 0;
 	u_int32_t k;
@@ -86,7 +86,7 @@ bpf_filter(const struct bpf_insn *pc, char *p, u_int wirelen, u_int buflen)
 		/*
 		 * No filter means accept all.
 		 */
-		return ((u_int)-1);
+		return ((unsigned int)-1);
 
 	--pc;
 	while (1) {
@@ -96,10 +96,10 @@ bpf_filter(const struct bpf_insn *pc, char *p, u_int wirelen, u_int buflen)
 			abort();
 
 		case BPF_RET|BPF_K:
-			return ((u_int)pc->k);
+			return ((unsigned int)pc->k);
 
 		case BPF_RET|BPF_A:
-			return ((u_int)A);
+			return ((unsigned int)A);
 
 		case BPF_LD|BPF_W|BPF_ABS:
 			k = pc->k;
@@ -336,7 +336,7 @@ bpf_filter(const struct bpf_insn *pc, char *p, u_int wirelen, u_int buflen)
 	}
 }
 
-static const u_short	bpf_code_map[] = {
+static const unsigned short	bpf_code_map[] = {
 	0x10ff,	/* 0x00-0x0f: 1111111100001000 */
 	0x3070,	/* 0x10-0x1f: 0000111000001100 */
 	0x3131,	/* 0x20-0x2f: 1000110010001100 */
@@ -389,13 +389,13 @@ bpf_validate(const struct bpf_insn *f, int len)
 		 * the code block.
 		 */
 		if (BPF_CLASS(p->code) == BPF_JMP) {
-			register u_int offset;
+			register unsigned int offset;
 
 			if (p->code == (BPF_JMP|BPF_JA))
 				offset = p->k;
 			else
 				offset = p->jt > p->jf ? p->jt : p->jf;
-			if (offset >= (u_int)(len - i) - 1)
+			if (offset >= (unsigned int)(len - i) - 1)
 				return (0);
 			continue;
 		}
